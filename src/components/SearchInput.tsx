@@ -64,8 +64,8 @@ export const SearchInput = ({
               }}
               onKeyDown={handleKeyPress}
               placeholder="Search by name, city, degree, specialties..."
-              className={`w-full px-4 py-2 border rounded-md shadow-sm focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 text-sm ${
-                error ? "border-red-500" : "border-blue-500"
+              className={`w-full px-4 py-2 border rounded-md shadow-sm focus:ring-1 focus:ring-black focus:border-black bg-white text-gray-900 text-sm ${
+                error ? "border-red-500" : "border-gray-300"
               }`}
               autoFocus
             />
