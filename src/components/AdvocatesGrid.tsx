@@ -1,4 +1,4 @@
-import AdvocateCard from "./AdvocateCard";
+import { AdvocateCard, SkeletonCard } from "./";
 import { Advocate } from "../types";
 
 interface AdvocatesGridProps {
@@ -6,9 +6,18 @@ interface AdvocatesGridProps {
   isLoading: boolean;
 }
 
-const AdvocatesGrid = ({ advocates, isLoading }: AdvocatesGridProps) => {
+export const AdvocatesGrid = ({ advocates, isLoading }: AdvocatesGridProps) => {
   if (isLoading) {
-    return "Loading...";
+    return (
+      <ul
+        role="list"
+        className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {Array.from({ length: 12 }).map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
+      </ul>
+    );
   }
 
   return (
@@ -17,9 +26,7 @@ const AdvocatesGrid = ({ advocates, isLoading }: AdvocatesGridProps) => {
       className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
     >
       {advocates.map((advocate) => (
-        <div key={advocate.id}>
-          {advocate.firstName} {advocate.lastName}
-        </div>
+        <AdvocateCard key={advocate.id} advocate={advocate} />
       ))}
     </ul>
   );
