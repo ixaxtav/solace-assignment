@@ -47,6 +47,19 @@ export default function Home() {
     }
   };
 
+  const getSearchMessage = () => {
+    if (!searchTerm) {
+      return "Enter a search term to find advocates";
+    }
+
+    if (advocates.length === 0) {
+      return `No advocates found for "${searchTerm}"`;
+    }
+
+    const plural = advocates.length === 1 ? "" : "s";
+    return `Found ${advocates.length} advocate${plural} for "${searchTerm}"`;
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,23 +72,9 @@ export default function Home() {
 
         <SearchInput onSearch={handleSearch} isLoading={isLoading} />
 
-        {searchTerm ? (
-          <div className="mb-6 text-center">
-            <p className="text-lg text-gray-600">
-              {advocates.length > 0
-                ? `Found ${advocates.length} advocate${
-                    advocates.length === 1 ? "" : "s"
-                  } for "${searchTerm}"`
-                : `No advocates found for "${searchTerm}"`}
-            </p>
-          </div>
-        ) : (
-          <div className="mb-6 text-center">
-            <p className="text-lg text-gray-600">
-              Enter a search term to find advocates
-            </p>
-          </div>
-        )}
+        <div className="mb-6 text-left">
+          <p className="text-sm text-gray-600">{getSearchMessage()}</p>
+        </div>
 
         <AdvocatesGrid advocates={advocates} isLoading={isLoading} />
       </div>
