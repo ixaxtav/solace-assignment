@@ -1,91 +1,108 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { AdvocatesGrid, SearchInput, Pagination } from "../components";
+import { Advocate, PaginationInfo } from "../types";
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [advocates, setAdvocates] = useState<Advocate[]>([]);
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-  }, []);
+  const searchTerm = searchParams.get("search") || "";
+  const currentPage = parseInt(searchParams.get("page") || "1");
 
-  const onChange = (e) => {
-    const searchTerm = e.target.value;
+  const fetchAdvocates = async (search: string, page: number = 1) => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      params.append("page", page.toString());
+      params.append("limit", "12");
 
-    document.getElementById("search-term").innerHTML = searchTerm;
+      const response = await fetch(`/api/advocates?${params}`);
+      const result = await response.json();
 
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
+      setAdvocates(result.data || []);
+      setPagination(result.pagination || null);
+    } catch (error) {
+      console.error("Error fetching advocates:", error);
+      setAdvocates([]);
+      setPagination(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onClick = () => {
-    console.log(advocates);
-    setFilteredAdvocates(advocates);
+  useEffect(() => {
+    if (searchTerm) {
+      fetchAdvocates(searchTerm, currentPage);
+    } else {
+      setAdvocates([]);
+      setPagination(null);
+    }
+  }, [searchTerm, currentPage]);
+
+  const handleSearch = (term: string) => {
+    if (term) {
+      router.push(`/?search=${encodeURIComponent(term)}&page=1`);
+    } else {
+      router.push("/");
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.append("search", searchTerm);
+    params.append("page", page.toString());
+    router.push(`/?${params}`);
+  };
+
+  const getSearchMessage = () => {
+    if (!searchTerm) {
+      return "Enter a search term to find advocates";
+    }
+
+    if (advocates.length === 0) {
+      return `No advocates found for "${searchTerm}"`;
+    }
+
+    if (pagination) {
+      const { totalCount, page, limit } = pagination;
+      const startItem = (page - 1) * limit + 1;
+      const endItem = Math.min(page * limit, totalCount);
+      return `Showing ${startItem}-${endItem} of ${totalCount} advocates for "${searchTerm}"`;
+    }
+
+    const plural = advocates.length === 1 ? "" : "s";
+    return `Found ${advocates.length} advocate${plural} for "${searchTerm}"`;
   };
 
   return (
-    <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
+    <main className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Solace Advocates</h1>
+          <p className="mt-2 text-lg text-gray-600">
+            Find the right advocate for your needs
+          </p>
+        </div>
+
+        <SearchInput onSearch={handleSearch} isLoading={isLoading} />
+
+        <div className="mb-6 text-left">
+          <p className="text-sm text-gray-600">{getSearchMessage()}</p>
+        </div>
+
+        <AdvocatesGrid advocates={advocates} isLoading={isLoading} />
+
+        {pagination && (
+          <Pagination pagination={pagination} onPageChange={handlePageChange} />
+        )}
       </div>
-      <br />
-      <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
-              <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div>{s}</div>
-                  ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </main>
   );
 }
