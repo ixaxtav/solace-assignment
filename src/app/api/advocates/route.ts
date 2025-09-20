@@ -1,6 +1,6 @@
 import db from "../../../db";
 import { advocates } from "../../../db/schema";
-import { sql, or, ilike, count } from "drizzle-orm";
+import { sql, or, ilike, count, eq } from "drizzle-orm";
 
 // @TODO: This is not the best way to do this. Recommend using full text search instead.
 export async function GET(req: Request) {
@@ -17,7 +17,6 @@ export async function GET(req: Request) {
           ilike(advocates.lastName, `%${search}%`),
           ilike(advocates.city, `%${search}%`),
           ilike(advocates.degree, `%${search}%`),
-          sql`${advocates.yearsOfExperience}::text ILIKE ${`%${search}%`}`,
           sql`
             EXISTS (
               SELECT 1
