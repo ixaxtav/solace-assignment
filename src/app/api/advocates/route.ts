@@ -17,13 +17,7 @@ export async function GET(req: Request) {
           ilike(advocates.lastName, `%${search}%`),
           ilike(advocates.city, `%${search}%`),
           ilike(advocates.degree, `%${search}%`),
-          sql`
-            EXISTS (
-              SELECT 1
-              FROM jsonb_array_elements_text(${advocates.specialties}) AS s
-              WHERE s ILIKE ${`%${search}%`}
-            )
-          `
+          sql`${advocates.specialties}::text ILIKE ${`%${search}%`}`
         )
       : undefined;
 
