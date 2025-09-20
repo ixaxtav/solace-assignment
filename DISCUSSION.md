@@ -1,0 +1,7 @@
+- Update GET request to a more performant one so it can handle 100k+ records. Maybe implement Full Text Search or other method
+- Robust error handling
+- Unit Test & Integration Test
+- Add a separate filter for years of experience
+- Implement caching strategy for frequently accessed data
+- Sort the data by name
+- Add input validation and sanitization for search queries to prevent SQL injection
