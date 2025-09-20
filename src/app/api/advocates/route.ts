@@ -34,10 +34,10 @@ export async function GET(req: Request) {
       pagination: {
         page,
         limit,
-        total,
-        pages,
-        next: page < pages,
-        prev: page > 1,
+        totalCount: total,
+        totalPages: pages,
+        hasNext: page < pages,
+        hasPrev: page > 1,
       },
     });
   } catch (err) {
