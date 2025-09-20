@@ -9,13 +9,4 @@ interface Advocate {
   phoneNumber: number;
 }
 
-interface PaginationInfo {
-  page: number;
-  limit: number;
-  totalCount: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
-export type { Advocate, PaginationInfo };
+export type { Advocate };

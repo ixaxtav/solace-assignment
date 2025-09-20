@@ -2,36 +2,30 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AdvocatesGrid, SearchInput, Pagination } from "../components";
-import { Advocate, PaginationInfo } from "../types";
+import { AdvocatesGrid, SearchInput } from "../components";
+import { Advocate } from "../types";
 
 export default function Home() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
-  const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const searchTerm = searchParams.get("search") || "";
-  const currentPage = parseInt(searchParams.get("page") || "1");
 
-  const fetchAdvocates = async (search: string, page: number = 1) => {
+  const fetchAdvocates = async (search: string) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.append("search", search);
-      params.append("page", page.toString());
-      params.append("limit", "10");
 
       const response = await fetch(`/api/advocates?${params}`);
       const result = await response.json();
 
       setAdvocates(result.data || []);
-      setPagination(result.pagination || null);
     } catch (error) {
       console.error("Error fetching advocates:", error);
       setAdvocates([]);
-      setPagination(null);
     } finally {
       setIsLoading(false);
     }
@@ -39,27 +33,18 @@ export default function Home() {
 
   useEffect(() => {
     if (searchTerm) {
-      fetchAdvocates(searchTerm, currentPage);
+      fetchAdvocates(searchTerm);
     } else {
       setAdvocates([]);
-      setPagination(null);
     }
-  }, [searchTerm, currentPage]);
+  }, [searchTerm]);
 
   const handleSearch = (term: string) => {
-    const params = new URLSearchParams();
-    if (term) params.append("search", term);
-    params.append("page", "1"); // Reset to first page on new search
-    
-    router.push(`/?${params.toString()}`);
-  };
-
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.append("search", searchTerm);
-    params.append("page", page.toString());
-    
-    router.push(`/?${params.toString()}`);
+    if (term) {
+      router.push(`/?search=${encodeURIComponent(term)}`);
+    } else {
+      router.push("/");
+    }
   };
 
   return (
@@ -77,17 +62,11 @@ export default function Home() {
         {searchTerm ? (
           <div className="mb-6 text-center">
             <p className="text-lg text-gray-600">
-              {pagination ? (
-                `Found ${pagination.totalCount} advocate${
-                  pagination.totalCount === 1 ? "" : "s"
-                } for "${searchTerm}" (Page ${pagination.page} of ${pagination.totalPages})`
-              ) : advocates.length > 0 ? (
-                `Found ${advocates.length} advocate${
-                  advocates.length === 1 ? "" : "s"
-                } for "${searchTerm}"`
-              ) : (
-                `No advocates found for "${searchTerm}"`
-              )}
+              {advocates.length > 0
+                ? `Found ${advocates.length} advocate${
+                    advocates.length === 1 ? "" : "s"
+                  } for "${searchTerm}"`
+                : `No advocates found for "${searchTerm}"`}
             </p>
           </div>
         ) : (
@@ -99,10 +78,6 @@ export default function Home() {
         )}
 
         <AdvocatesGrid advocates={advocates} isLoading={isLoading} />
-        
-        {pagination && pagination.totalPages > 1 && (
-          <Pagination pagination={pagination} onPageChange={handlePageChange} />
-        )}
       </div>
     </main>
   );
